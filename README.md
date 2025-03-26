@@ -7,3 +7,9 @@ Supports
 * Lazy evaluation
 * Basic arithmetic operations
 * Lists
+
+## Usage
+
+```
+dune exec ./frontend.exe [filename.pl]
+```
