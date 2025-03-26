@@ -1,6 +1,6 @@
 (executable
   (name frontend)
-  (flags (:standard -warn-error -8-27))
+  (flags (:standard))
   (modules frontend parser lexer ast solver utils)
   )
 
