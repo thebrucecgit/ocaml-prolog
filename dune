@@ -1,0 +1,10 @@
+(executable
+  (name frontend)
+  (flags (:standard -warn-error -8-27))
+  (modules frontend parser lexer ast solver utils)
+  )
+
+(ocamllex lexer)
+(menhir
+  (modules parser)
+  (flags --explain))
