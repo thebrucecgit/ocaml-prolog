@@ -43,20 +43,31 @@ let print_result = function
 | result -> List.iter
   (fun (name, value) -> name ^ ": " ^ string_of_term value |> print_endline) result
 
-let init file =
-  let file_channel = try open_in file
-                with _ -> raise (Error "can't open file ") in
+let parse_file filename = 
+  let file_channel = 
+    try open_in filename
+    with _ -> raise (Error "can't open file ") in
   let lexbuf = Lexing.from_channel file_channel in
-  try
+  try 
     let program = Parser.main Lexer.token lexbuf in
     print_endline (string_of_program program);
-    let prompt_query () = 
-      (try
-        print_string "?- " ;
-        let raw_query = read_line () in
-        if raw_query = "" then () else
-        let query = Parser.query Lexer.token (Lexing.from_string raw_query) in
-        print_endline (string_of_clauses query);
+    program
+  with _ -> raise (Error (parse_error lexbuf))
+
+let prompt_query () =
+  print_string "?- " ;
+  let raw_query = read_line () in
+  if raw_query = "" then raise (Error "query parse error") else
+  let query = Parser.query Lexer.token (Lexing.from_string raw_query) in
+  print_endline (string_of_clauses query);
+  query
+
+let init filename =
+  try
+    let program = parse_file filename in
+    while true do
+      try
+        let query = prompt_query () in
         let Cont initial = continuation_map print_result (solve program query) in
         let step = ref initial in
         while true do
@@ -66,12 +77,10 @@ let init file =
         done
       with
       | Fail -> print_endline "false."
-      | Error str -> print_endline str) in
-    while true do
-      prompt_query ()
+      | Error str -> print_endline str
     done
   with
-  | _ -> print_endline (parse_error lexbuf)
+  | Error str -> print_endline str
 
 let () = 
   if Array.length Sys.argv < 2 then raise (Error "Expected argument [filename.pl]")

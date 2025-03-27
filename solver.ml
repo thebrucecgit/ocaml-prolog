@@ -69,7 +69,6 @@ let rec unify maps a b : maps =
   | Int _, (List (_, _) | Concrete (_, _))
   | List (_, _), (Int _ | Concrete (_,_)) ->
     raise Fail
-  (* | a, b -> unify maps b a *)
 
 let unify_opt maps a b = 
   try Some (unify maps a b)
@@ -136,32 +135,35 @@ let rec get_variables = function
 | _ -> []
 
 let solve program query =
-  let rec try_goals state onSuccess = function
-  | [] -> onSuccess state
+  let rec try_goals state on_success = function
+  | [] -> on_success state
   | goal::tl -> 
-    let onNextSuccess state = try_goals state onSuccess tl in
+    let onNextSuccess state = try_goals state on_success tl in
     search state onNextSuccess goal
   
-  and search (maps, Cont onFail) onSuccess qterm =
+  and search (maps, Cont on_fail) on_success qterm =
   (* tries to unify input goals; calls `onFail` if one fails; calls `onSuccess` if all succeed *)
     let rec match_rules rules maps qterm = 
       match rules with
-      | [] -> (try onSuccess (system_rules maps qterm, Cont onFail)
-              with Fail -> onFail ())   (* if no user-defined rules match, try system rules *)
+      | [] -> 
+        (try on_success (system_rules maps qterm, Cont on_fail)
+        with Fail -> on_fail ())   (* if no user-defined rules match, try system rules *)
       | rule::tl -> 
         let next_rule () = match_rules tl maps qterm in
         let Rule (head, goals) = convert_rule rule in
         match unify_opt maps head qterm with
-        | Some unified -> try_goals (unified, Cont next_rule) onSuccess goals
+        | Some unified -> try_goals (unified, Cont next_rule) on_success goals
         | None -> next_rule ()
 
     in match_rules program maps qterm
   in
 
   Random.init 183749;
-  let variables =  query |> List.concat_map get_variables |> List.sort_uniq compare in
-  let empty_maps = (StringMap.empty, StringMap.empty) in
+  let variables = query |> List.concat_map get_variables |> List.sort_uniq compare in
+  let empty_maps = StringMap.(empty, empty) in
   let not_found () = raise Fail in
-  let extract_variables (maps: maps) = List.map (fun var -> (var, ground_term maps (Var var))) variables in
-  let initial = Cont (fun () -> (try_goals [@tailend]) (empty_maps, Cont not_found) Fun.id query) in
+  let extract_variables (maps: maps) = 
+    List.map (fun var -> (var, ground_term maps (Var var))) variables in
+  let initial = 
+    Cont (fun () -> (try_goals [@tailend]) (empty_maps, Cont not_found) Fun.id query) in
   continuation_map extract_variables initial
