@@ -87,10 +87,8 @@ let rec ground_term maps = function
   | List (heads, Some tail) ->
     let grounded_heads = List.map (ground_term maps) heads in
     (match ground_term maps tail with
-    | Varall -> List (grounded_heads, Some Varall)
-    | Var x -> List (grounded_heads, Some (Var x))
     | List (hd, tl) -> List (grounded_heads @ hd, tl)
-    | _ -> raise (Error "this error should be impossible"))
+    | other -> List (grounded_heads, Some other))
   | x -> x
 
 let ground_rule maps (Rule (head, goals)) =
@@ -116,7 +114,7 @@ let system_rules maps =
   | Concrete ("=", [a; b]) -> unify maps a b
   | Concrete ("<", [a; b]) -> check_int_pair a b (<)
   | Concrete (">", [a; b]) -> check_int_pair a b (>)
-  | Concrete ("<=", [a; b]) -> check_int_pair a b (<=)
+  | Concrete ("=<", [a; b]) -> check_int_pair a b (<=)
   | Concrete (">=", [a; b]) -> check_int_pair a b (>=)
   | Concrete ("=:=", [a; b]) -> check_int_pair a b (=)
   | Concrete ("=/=", [a; b]) -> check_int_pair a b (<>)
