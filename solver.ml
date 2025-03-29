@@ -118,7 +118,9 @@ let system_rules maps =
   | Concrete (">=", [a; b]) -> check_int_pair a b (>=)
   | Concrete ("=:=", [a; b]) -> check_int_pair a b (=)
   | Concrete ("=/=", [a; b]) -> check_int_pair a b (<>)
-  | Concrete ("==", [a; b]) -> ignore (unify maps a b); maps
+  | Concrete ("==", [a; b]) -> 
+    if ground_term maps a = ground_term maps b then maps
+    else raise Fail
   | Concrete ("is", [Var x; expr]) -> 
     unify maps (Var x) (Int (expr |> ground_term maps |> reduce))
   | _ -> raise Fail
