@@ -1,4 +1,15 @@
 open Ast
+open Effect
+(* open Effect.Deep *)
+
+module StringMap = Map.Make(String)
+type varMap = string StringMap.t
+type termMap = term StringMap.t
+type maps = varMap * termMap
+
+type _ Effect.t += 
+  | Return: maps -> unit t
+  | ReturnList: (string * term) list -> unit t
 
 let rec string_of_term = function
 | Concrete (sym, []) -> sym
@@ -23,7 +34,3 @@ let string_of_rule (Rule (def, clauses)) =
 let string_of_program (rules : program) : string =
   String.concat "\n" (List.map string_of_rule rules)
     
-
-type 'a continuation = Cont of (unit -> 'a * 'a continuation)
-let rec continuation_map f (Cont c) =
-  Cont (fun () -> let (res, next) = c () in f res, continuation_map f next)

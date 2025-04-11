@@ -1,6 +1,7 @@
 open Parser
 open Solver
 open Utils
+open Effect.Deep
 
 let [@warning "-32"] string_of_token  = function
 | VARALL -> "VARALL"
@@ -68,15 +69,13 @@ let init filename =
     while true do
       try
         let query = prompt_query () in
-        let Cont initial = continuation_map print_result (solve program query) in
-        let step = ref initial in
-        while true do
-          let (_, Cont next) = !step () in
-          step := next; 
-          ignore (read_line ())
-        done
+        match solve program query with
+        | () -> print_endline "false."
+        | effect (ReturnList result), k ->
+          print_result result;
+          ignore (read_line ());
+          continue k ()
       with
-      | Fail -> print_endline "false."
       | Error str -> print_endline str
     done
   with
