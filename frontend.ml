@@ -30,6 +30,7 @@ let [@warning "-32"] string_of_token  = function
 | LEQ -> "LEQ"
 | GEQ -> "GEQ"
 | DEQ -> "DEQ"
+| CUT -> "CUT"
 
 
 let parse_error (lexbuf: Lexing.lexbuf) = 

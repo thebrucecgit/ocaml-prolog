@@ -10,6 +10,7 @@ let int_reg_exp = ['0'-'9']+
 
 rule token = parse
   | [' ' '\t' '\n'] { token lexbuf }
+  | '!' { CUT }
   | '(' { LPAREN }
   | ')' { RPAREN }
   | '[' { LBRAC }

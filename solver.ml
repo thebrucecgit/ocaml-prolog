@@ -132,14 +132,16 @@ let rec get_variables = function
 | _ -> []
 
 let solve program query =
+  (* Tries to resolve a list of goals, returns bool representing cut *)
   let rec try_goals maps = function
-  | [] -> perform (Return maps)
+  | [] -> perform (Return maps); false
+  | (Concrete ("!", []))::tl -> try_goals maps tl || true
   | goal::tl -> 
     match search maps goal with
-    | () -> ()
+    | () -> false
     | effect (Return maps), k -> 
-      try_goals maps tl;
-      continue k ()
+      if try_goals maps tl then true
+      else continue k ()
   
   and search maps qterm =
     let rec match_rules rules maps qterm = 
@@ -150,9 +152,8 @@ let solve program query =
       | rule::tl ->
         let Rule (head, goals) = convert_rule rule in
         (match unify_opt maps head qterm with
-        | Some unified -> try_goals unified goals
-        | None -> ());
-        match_rules tl maps qterm
+        | Some unified when try_goals unified goals -> ()
+        | _ -> match_rules tl maps qterm)
 
     in match_rules program maps qterm
   in
@@ -166,4 +167,4 @@ let solve program query =
   | effect (Return maps), k ->
     perform (ReturnList (extract_variables maps));
     continue k ()
-  | () -> ()
+  | _ -> ()

@@ -3,7 +3,7 @@
 %}
 %token <int> INT
 %token <string> VAR SYM
-%token LPAREN RPAREN LBRAC RBRAC MID END IF UNIFY COMMA VARALL EOF
+%token LPAREN RPAREN LBRAC RBRAC MID END IF UNIFY COMMA VARALL EOF CUT
 %token ADD SUB MUL IDIV IS GT LT GEQ LEQ EQ NEQ DEQ
 
 %nonassoc IS UNIFY GT LT GEQ LEQ EQ NEQ DEQ
@@ -29,6 +29,7 @@ arguments:
 | term COMMA arguments { $1 :: $3 }
 
 term:
+| CUT { Concrete ("!", []) }
 | INT { Int $1 }
 | VARALL { Varall }
 | VAR { Var $1 } 
